@@ -1,5 +1,8 @@
 #include <cassert>
+#include <functional>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <stack>
 #include <variant>
 #include <vector>
@@ -170,9 +173,57 @@ void test_tree_is_symmetric() {
   assert(!tree_is_symmetric(tree));
 }
 
-  int main() {
-    // test_find_first_common_node();
-    // test_evaluate_rpn();
-    test_tree_is_symmetric();
-    return 0;
+void flat_preorder_traversal(
+    std::shared_ptr<BinaryTreeNode> root,
+    std::function<bool(std::shared_ptr<BinaryTreeNode>)> action) {
+  enum Stage { LEFT, RIGHT, ACTION };
+  std::stack<std::pair<std::shared_ptr<BinaryTreeNode>, Stage>> stack;
+  auto push_actions = [&stack](auto n) {
+    if (n != nullptr) {
+      stack.push({n, ACTION});
+      stack.push({n, RIGHT});
+      stack.push({n, LEFT});
+    }
+  };
+  push_actions(root);
+  while (!stack.empty()) {
+    const auto [n, stage] = stack.top();
+    stack.pop();
+    switch (stage) {
+    case LEFT:
+      push_actions(n->left);
+      break;
+    case RIGHT:
+      push_actions(n->right);
+      break;
+    case ACTION:
+      if (!action(n)) {
+        return;
+      }
+      break;
+    }
   }
+}
+
+void test_flat_preorder_traversal() {
+  auto *t = &make_tree;
+  std::ostringstream strm;
+  auto track_traversal = [&strm](std::shared_ptr<BinaryTreeNode> n) -> bool {
+    strm << n->value << ",";
+    return true;
+  };
+
+  std::shared_ptr<BinaryTreeNode> tree;
+  tree =
+      t(0, t(1, t(2, {}, {}), t(3, {}, {})), t(4, t(5, {}, {}), t(6, {}, {})));
+  flat_preorder_traversal(tree, track_traversal);
+  std::cout << strm.str() << "\n";
+}
+
+int main() {
+  // test_find_first_common_node();
+  // test_evaluate_rpn();
+  // test_tree_is_symmetric();
+  test_flat_preorder_traversal();
+  return 0;
+}
