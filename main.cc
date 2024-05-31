@@ -220,10 +220,65 @@ void test_flat_preorder_traversal() {
   std::cout << strm.str() << "\n";
 }
 
+std::variant<bool, std::shared_ptr<BinaryTreeNode>>
+find_lowest_common_ancestor(std::shared_ptr<BinaryTreeNode> n,
+                            std::shared_ptr<BinaryTreeNode> n1,
+                            std::shared_ptr<BinaryTreeNode> n2) {
+  if (n == nullptr) {
+    return false;
+  }
+  auto v_left = find_lowest_common_ancestor(n->left, n1, n2);
+  if (auto *lca = std::get_if<1>(&v_left)) {
+    return *lca;
+  }
+  auto v_right = find_lowest_common_ancestor(n->right, n1, n2);
+  if (auto *lca = std::get_if<1>(&v_right)) {
+    return *lca;
+  }
+  int n_found = int((n == n1) || (n == n2)) + int(std::get<0>(v_left)) +
+                int(std::get<0>(v_right));
+  switch (n_found) {
+  case 0:
+    return false;
+  case 1:
+    return true;
+  case 2:
+    return n;
+  default:
+    assert(false);
+  }
+}
+
+void test_find_lowest_common_ancestor() {
+  auto *t = &make_tree;
+  auto root =
+      t(0, t(1, t(2, {}, {}), t(3, {}, {})), t(4, t(5, {}, {}), t(6, {}, {})));
+  auto res = find_lowest_common_ancestor(root, root->left, root->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root);
+  res = find_lowest_common_ancestor(root, root, root->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root);
+  res = find_lowest_common_ancestor(root, root, root->right->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root);
+  res = find_lowest_common_ancestor(root, root->right, root->right->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root->right);
+  res =
+      find_lowest_common_ancestor(root, root->right->left, root->right->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root->right);
+  res = find_lowest_common_ancestor(root, root->left->left, root->right->right);
+  assert(res.index() == 1);
+  assert(std::get<1>(res) == root);
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
   // test_tree_is_symmetric();
-  test_flat_preorder_traversal();
+  // test_flat_preorder_traversal();
+  test_find_lowest_common_ancestor();
   return 0;
 }
