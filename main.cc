@@ -2,6 +2,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <queue>
 #include <sstream>
 #include <stack>
 #include <variant>
@@ -274,11 +275,98 @@ void test_find_lowest_common_ancestor() {
   assert(std::get<1>(res) == root);
 }
 
+void sort_up_to_k(std::vector<int> &v, int k) {
+
+  std::priority_queue<int, std::vector<int>, std::greater<int>> queue(
+      std::greater<int>{});
+  int j = 0;
+  for (int i = 0; i < v.size(); ++i) {
+    queue.push(v[i]);
+    if (queue.size() == k + 1) {
+      v.at(j++) = queue.top();
+      queue.pop();
+    }
+  }
+  while (!queue.empty()) {
+    v.at(j++) = queue.top();
+    queue.pop();
+  }
+}
+
+bool vector_equal(const std::vector<int> &v1, const std::vector<int> &v2) {
+  if (v1.size() != v2.size()) {
+    return false;
+  }
+  for (int i = 0; i < v1.size(); ++i) {
+    if (v1[i] != v2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void test_sort_up_to_k() {
+  std::vector<int> v{2, 1, 0, 3, 5, 4, 6};
+  std::vector<int> w{0, 1, 2, 3, 4, 5, 6};
+  sort_up_to_k(v, 3);
+  assert(vector_equal(v, w));
+}
+
+int find_minimum_cyclically_sorted(const std::vector<int> &v) {
+  int i0 = 0;
+  int i1 = v.size() / 2;
+  int i_min = 0;
+  if (v.at(i1) > v.at(i0)) {
+    i_min = i0;
+    i0 = i1;
+    i1 = v.size() - 1;
+    // min is in (i1, end) or i0
+  } else {
+    i_min = i1;
+    // min is in (i0, i1]
+  }
+  while (i0 + 1 < i1) {
+    int i2 = (i0 + i1) / 2;
+    if (v.at(i2) < v.at(i_min)) {
+      i1 = i2;
+      i_min = i2;
+    } else {
+      i0 = i2;
+    }
+  }
+  if (v.at(i1) < v.at(i_min)) {
+    i_min = i1;
+  }
+  return i_min;
+}
+
+void test_find_minimum_cyclically_sorted() {
+  auto *f = &find_minimum_cyclically_sorted;
+  assert(f({1}) == 0);
+  assert(f({1, 2}) == 0);
+  assert(f({2, 1}) == 1);
+  assert(f({1, 2, 3}) == 0);
+  assert(f({3, 1, 2}) == 1);
+  assert(f({2, 3, 1}) == 2);
+  assert(f({1, 2, 3, 4}) == 0);
+  assert(f({4, 1, 2, 3}) == 1);
+  assert(f({3, 4, 1, 2}) == 2);
+  assert(f({2, 3, 4, 1}) == 3);
+  assert(f({1, 2, 3, 4, 5}) == 0);
+  assert(f({5, 1, 2, 3, 4}) == 1);
+  assert(f({4, 5, 1, 2, 3}) == 2);
+  assert(f({3, 4, 5, 1, 2}) == 3);
+  assert(f({2, 3, 4, 5, 1}) == 4);
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
   // test_tree_is_symmetric();
   // test_flat_preorder_traversal();
-  test_find_lowest_common_ancestor();
+  // test_sort_up_to_k();
+  // test_find_minimum_cyclically_sorted();
+  // test_find_lowest_common_ancestor();
+  // test_flat_tree_traverse();
   return 0;
 }
