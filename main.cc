@@ -275,12 +275,12 @@ void test_find_lowest_common_ancestor() {
   assert(std::get<1>(res) == root);
 }
 
-void sort_up_to_k(std::vector<int> &v, int k) {
+void sort_up_to_k(std::vector<int> &v, size_t k) {
 
   std::priority_queue<int, std::vector<int>, std::greater<int>> queue(
       std::greater<int>{});
   int j = 0;
-  for (int i = 0; i < v.size(); ++i) {
+  for (size_t i = 0; i < v.size(); ++i) {
     queue.push(v[i]);
     if (queue.size() == k + 1) {
       v.at(j++) = queue.top();
@@ -297,7 +297,7 @@ bool vector_equal(const std::vector<int> &v1, const std::vector<int> &v2) {
   if (v1.size() != v2.size()) {
     return false;
   }
-  for (int i = 0; i < v1.size(); ++i) {
+  for (size_t i = 0; i < v1.size(); ++i) {
     if (v1[i] != v2[i]) {
       return false;
     }
@@ -359,6 +359,63 @@ void test_find_minimum_cyclically_sorted() {
   assert(f({2, 3, 4, 5, 1}) == 4);
 }
 
+void reverse(std::vector<int> &v, int begin, int end) {
+  int i = begin;
+  int j = end - 1;
+  while (i < j) {
+    std::swap(v[i++], v[j--]);
+  }
+}
+
+std::vector<int> reversed(const std::vector<int> &v, int begin, int end) {
+  auto result = v;
+  reverse(result, begin, end);
+  return result;
+}
+
+void test_reverse() {
+  assert(vector_equal(reversed({1, 2, 3, 4}, 0, 4), {4, 3, 2, 1}));
+  assert(vector_equal(reversed({1, 2, 3, 4}, 1, 4), {1, 4, 3, 2}));
+  assert(vector_equal(reversed({1, 2, 3, 4}, 2, 4), {1, 2, 4, 3}));
+  assert(vector_equal(reversed({1, 2, 3, 4}, 0, 3), {3, 2, 1, 4}));
+  assert(vector_equal(reversed({1, 2, 3, 4}, 0, 2), {2, 1, 3, 4}));
+  assert(vector_equal(reversed({1, 2, 3, 4}, 1, 3), {1, 3, 2, 4}));
+}
+
+bool next_permutation(std::vector<int> &v) {
+  int i = v.size() - 2;
+  while (i >= 0 && v[i] > v[i + 1])
+    --i;
+  if (i >= 0) {
+    int j = i + 1;
+    while (j < int(v.size()) && v[j] > v[i]) {
+      ++j;
+    }
+    std::swap(v[i], v[j - 1]);
+  }
+  reverse(v, i + 1, v.size());
+  return i >= 0;
+}
+
+void test_next_permutation() {
+  auto np = [](const std::vector<int> &v) {
+    auto result = v;
+    next_permutation(result);
+    return result;
+  };
+  std::vector<std::vector<int>> test_cases = {
+      {1, 2, 3, 4, 5}, {1, 2, 3, 5, 4}, {1, 2, 4, 3, 5}, {1, 2, 4, 5, 3},
+      {1, 2, 5, 3, 4}, {1, 2, 5, 4, 3}, {1, 3, 2, 4, 5}, {1, 3, 2, 5, 4},
+      {1, 3, 4, 2, 5}, {1, 3, 4, 5, 2}, {1, 3, 5, 2, 4}, {1, 3, 5, 4, 2},
+  };
+
+  for (size_t i = 0; i + 1 < test_cases.size(); ++i) {
+    assert(vector_equal(np(test_cases[i]), test_cases[i + 1]));
+  }
+
+  assert(vector_equal(np({5, 4, 3, 2, 1}), {1, 2, 3, 4, 5}));
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -368,5 +425,7 @@ int main() {
   // test_find_minimum_cyclically_sorted();
   // test_find_lowest_common_ancestor();
   // test_flat_tree_traverse();
+  // test_reverse();
+  test_next_permutation();
   return 0;
 }
