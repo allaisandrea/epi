@@ -449,6 +449,26 @@ void test_find_lowest_common_ancestor_search_tree() {
   assert(res == root);
 }
 
+int count_grid_traversals(int rows, int cols, std::vector<bool> mask) {
+  assert(mask.size() == rows * cols);
+  std::vector<int> counts(rows * cols, 0);
+  counts[0] = 1;
+  for (int r = 0; r < rows; ++r) {
+    for (int c = 0; c < cols; ++c) {
+      const int count = counts[r * cols + c];
+      const int i1 = (r + 1) * cols + c;
+      const int i2 = r * cols + c + 1;
+      if (r + 1 < rows && mask[i1]) {
+        counts[i1] += count;
+      }
+      if (c + 1 < cols && mask[i2]) {
+        counts[i2] += count;
+      }
+    }
+  }
+  return counts.back();
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
