@@ -416,6 +416,39 @@ void test_next_permutation() {
   assert(vector_equal(np({5, 4, 3, 2, 1}), {1, 2, 3, 4, 5}));
 }
 
+std::shared_ptr<BinaryTreeNode>
+find_lowest_common_ancestor_search_tree(std::shared_ptr<BinaryTreeNode> n,
+                                        int v1, int v2) {
+  if (n == nullptr) {
+    return nullptr;
+  }
+  if (v2 < n->value) {
+    return find_lowest_common_ancestor_search_tree(n->left, v1, v2);
+  }
+  if (v1 > n->value) {
+    return find_lowest_common_ancestor_search_tree(n->right, v1, v2);
+  }
+  return n;
+}
+
+void test_find_lowest_common_ancestor_search_tree() {
+  auto *t = &make_tree;
+  auto root = t(16, t(8, t(4, {}, {}), t(12, {}, {})),
+                t(24, t(20, {}, {}), t(28, {}, {})));
+  auto res = find_lowest_common_ancestor_search_tree(root, 8, 24);
+  assert(res == root);
+  res = find_lowest_common_ancestor_search_tree(root, 16, 24);
+  assert(res == root);
+  res = find_lowest_common_ancestor_search_tree(root, 16, 28);
+  assert(res == root);
+  res = find_lowest_common_ancestor_search_tree(root, 24, 28);
+  assert(res == root->right);
+  res = find_lowest_common_ancestor_search_tree(root, 20, 28);
+  assert(res == root->right);
+  res = find_lowest_common_ancestor_search_tree(root, 4, 28);
+  assert(res == root);
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -426,6 +459,8 @@ int main() {
   // test_find_lowest_common_ancestor();
   // test_flat_tree_traverse();
   // test_reverse();
-  test_next_permutation();
+  // test_next_permutation();
+  // test_find_minimum_cyclically_sorted();
+  // test_find_lowest_common_ancestor_search_tree();
   return 0;
 }
