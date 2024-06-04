@@ -2,9 +2,11 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <sstream>
 #include <stack>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -450,7 +452,7 @@ void test_find_lowest_common_ancestor_search_tree() {
 }
 
 int count_grid_traversals(int rows, int cols, std::vector<bool> mask) {
-  assert(mask.size() == rows * cols);
+  assert(int(mask.size()) == rows * cols);
   std::vector<int> counts(rows * cols, 0);
   counts[0] = 1;
   for (int r = 0; r < rows; ++r) {
@@ -469,6 +471,77 @@ int count_grid_traversals(int rows, int cols, std::vector<bool> mask) {
   return counts.back();
 }
 
+std::optional<int> find_most_common(const std::vector<int> &v, size_t k) {
+  std::unordered_map<int, int> counts;
+  for (const int x : v) {
+    auto pair = counts.find(x);
+    if (pair != counts.end()) {
+      ++pair->second;
+    } else if (counts.size() < k) {
+      counts.insert({x, 1});
+    } else {
+      for (auto pair = counts.begin(); pair != counts.end();) {
+        if (pair->second == 1) {
+          pair = counts.erase(pair);
+        } else {
+          --pair->second;
+          ++pair;
+        }
+      }
+    }
+  }
+
+  std::optional<int> result{};
+  for (const auto &pair : counts) {
+    if (!result || *result < pair.second) {
+      result = pair.first;
+    }
+  }
+  return result;
+}
+
+void test_find_most_common() {
+  // clang-format off
+  std::vector<std::tuple<std::vector<int>, int, int>> test_cases{
+      {{1, 1, 1}, 1, 1},
+      {{1, 1, 2}, 1, 1},
+      {{1, 2, 1}, 1, 1},
+      {{2, 1, 1}, 1, 1},
+      {{1, 1, 1, 1}, 1, 1},
+      {{2, 1, 1, 1}, 1, 1},
+      {{1, 2, 1, 1}, 1, 1},
+      {{1, 1, 2, 1}, 1, 1},
+      {{1, 1, 1, 2}, 1, 1},
+      {{1, 1, 1, 1, 1}, 1, 1},
+      {{2, 1, 1, 1, 1}, 1, 1},
+      {{1, 2, 1, 1, 1}, 1, 1},
+      {{1, 1, 2, 1, 1}, 1, 1},
+      {{1, 1, 1, 2, 1}, 1, 1},
+      {{1, 1, 1, 1, 2}, 1, 1},
+      {{2, 2, 1, 1, 1}, 1, 1},
+      {{1, 2, 2, 1, 1}, 1, 1},
+      {{1, 1, 2, 2, 1}, 1, 1},
+      {{1, 1, 1, 2, 2}, 1, 1},
+      {{2, 1, 2, 1, 1}, 1, 1},
+      {{1, 2, 1, 2, 1}, 1, 1},
+      {{1, 1, 2, 1, 2}, 1, 1},
+      {{1, 1, 2, 3}, 1, 2},
+      {{1, 2, 1, 3}, 1, 2},
+      {{2, 1, 1, 3}, 1, 2},
+      {{1, 2, 3, 1}, 1, 2},
+      {{2, 1, 3, 1}, 1, 2},
+      {{2, 3, 1, 1}, 1, 2},
+      {{1, 1, 1, 2, 2, 3, 3}, 1, 2},
+      {{1, 2, 1, 3, 2, 1, 3}, 1, 2},
+  };
+  // clang-format on
+  for (const auto &[v, expected, k] : test_cases) {
+    auto r = find_most_common(v, k);
+    assert(r);
+    assert(*r == expected);
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -482,5 +555,6 @@ int main() {
   // test_next_permutation();
   // test_find_minimum_cyclically_sorted();
   // test_find_lowest_common_ancestor_search_tree();
+  test_find_most_common();
   return 0;
 }
