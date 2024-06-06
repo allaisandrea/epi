@@ -10,6 +10,16 @@
 #include <variant>
 #include <vector>
 
+template <typename T>
+std::ostream &operator<<(std::ostream &strm, const std::vector<T> &v) {
+  strm << "[";
+  for (const auto &x : v) {
+    strm << x << ",";
+  }
+  strm << "]";
+  return strm;
+}
+
 struct LinkedListNode {
   std::shared_ptr<LinkedListNode> next;
   int value;
@@ -542,6 +552,90 @@ void test_find_most_common() {
   }
 }
 
+int reverse_digits(int i) {
+  const bool negative = i < 0;
+  if (negative) {
+    i = -i;
+  }
+
+  int j = 0;
+  while (i > 0) {
+    j = 10 * j + (i % 10);
+    i = i / 10;
+  }
+
+  if (negative) {
+    j = -j;
+  }
+  return j;
+}
+
+void test_reverse_digits() {
+  assert(reverse_digits(0) == 0);
+  assert(reverse_digits(1) == 1);
+  assert(reverse_digits(12) == 21);
+  assert(reverse_digits(123) == 321);
+  assert(reverse_digits(-1) == -1);
+  assert(reverse_digits(-12) == -21);
+  assert(reverse_digits(-123) == -321);
+}
+
+bool sudoku_group_is_duplicate_free(const std::array<char, 81> &grid,
+                                    const std::array<int, 9> &group_index) {
+  std::array<int, 9> counts{};
+  for (const int i : group_index) {
+    if (grid.at(i) > 0 && (++counts.at(grid.at(i) - 1)) > 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+constexpr auto make_sudoku_groups() {
+  std::array<std::array<int, 9>, 27> groups{};
+  for (int i = 0; i < 9; ++i) {
+    for (int j = 0; j < 9; ++j) {
+      groups[i][j] = 9 * i + j;
+      groups[i + 9][j] = 9 * j + i;
+      groups[i + 18][j] = 9 * ((i / 3) * 3 + (j / 3)) + ((i % 3) * 3 + (j % 3));
+    }
+  }
+  return groups;
+}
+
+bool sudoku_is_valid(const std::array<char, 81> &grid) {
+  constexpr auto groups = make_sudoku_groups();
+  for (const auto &group : groups) {
+    if (!sudoku_group_is_duplicate_free(grid, group)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void test_sudoku_is_valid() {
+  const auto groups = make_sudoku_groups();
+  for (const auto &group : groups) {
+    std::cout << std::vector(group.begin(), group.end()) << "\n";
+  }
+  std::array<char, 81> grid{};
+  assert(sudoku_is_valid(grid));
+  grid[9 * 0 + 0] = 1;
+  assert(sudoku_is_valid(grid));
+  grid[9 * 0 + 1] = 1;
+  assert(!sudoku_is_valid(grid));
+  grid[9 * 0 + 1] = 2;
+  assert(sudoku_is_valid(grid));
+  grid[9 * 0 + 3] = 1;
+  assert(!sudoku_is_valid(grid));
+  grid[9 * 0 + 3] = 3;
+  assert(sudoku_is_valid(grid));
+  grid[9 * 1 + 0] = 1;
+  assert(!sudoku_is_valid(grid));
+  grid[9 * 1 + 0] = 4;
+  assert(sudoku_is_valid(grid));
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -555,6 +649,8 @@ int main() {
   // test_next_permutation();
   // test_find_minimum_cyclically_sorted();
   // test_find_lowest_common_ancestor_search_tree();
-  test_find_most_common();
+  // test_find_most_common();
+  // test_reverse_digits();
+  test_sudoku_is_valid();
   return 0;
 }
