@@ -1,3 +1,4 @@
+#include <array>
 #include <cassert>
 #include <functional>
 #include <iostream>
@@ -305,7 +306,8 @@ void sort_up_to_k(std::vector<int> &v, size_t k) {
   }
 }
 
-bool vector_equal(const std::vector<int> &v1, const std::vector<int> &v2) {
+template <typename T>
+bool vector_equal(const std::vector<T> &v1, const std::vector<T> &v2) {
   if (v1.size() != v2.size()) {
     return false;
   }
@@ -636,6 +638,50 @@ void test_sudoku_is_valid() {
   assert(sudoku_is_valid(grid));
 }
 
+void flood_fill(int rows, int cols, std::vector<bool> &image, int r, int c) {
+  assert(image.size() == rows * cols);
+  constexpr std::array<std::array<int, 2>, 4> deltas{
+      {{1, 0}, {0, 1}, {-1, 0}, {0, -1}}};
+  const bool color = image[r * rows + c];
+  std::queue<std::array<int, 2>> queue;
+  image[r * cols + c] = !color;
+  queue.push({r, c});
+  while (!queue.empty()) {
+    const auto [r, c] = queue.front();
+    queue.pop();
+    for (const auto &[dr, dc] : deltas) {
+      const int r1 = r + dr;
+      const int c1 = c + dc;
+      if (r1 >= 0 && r1 < rows && c1 >= 0 && c1 < cols &&
+          image[r1 * cols + c1] == color) {
+        image[r1 * cols + c1] = !color;
+        queue.push({r1, c1});
+      }
+    }
+  }
+}
+
+void test_flood_fill() {
+  // clang-format off
+  std::vector<bool> image = {
+      0,0,1,0,0,0,
+      0,0,1,0,0,0,
+      0,0,1,0,0,0,
+      1,1,1,0,0,0,
+      0,0,0,0,0,0,
+  };
+  std::vector<bool> image_expected = {
+      1,1,1,0,0,0,
+      1,1,1,0,0,0,
+      1,1,1,0,0,0,
+      1,1,1,0,0,0,
+      0,0,0,0,0,0,
+  };
+  // clang-format on
+  flood_fill(5, 6, image, 0, 1);
+  assert(vector_equal(image, image_expected));
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -651,6 +697,8 @@ int main() {
   // test_find_lowest_common_ancestor_search_tree();
   // test_find_most_common();
   // test_reverse_digits();
-  test_sudoku_is_valid();
+  // test_sudoku_is_valid();
+  test_flood_fill();
+
   return 0;
 }
