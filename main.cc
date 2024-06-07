@@ -682,6 +682,29 @@ void test_flood_fill() {
   assert(vector_equal(image, image_expected));
 }
 
+void reverse_word_order(std::string &str) {
+  std::reverse(str.begin(), str.end());
+  auto it1 = str.begin();
+  while (it1 != str.end()) {
+    while (it1 != str.end() && *it1 == ' ')
+      ++it1;
+    auto it2 = std::next(it1);
+    while (it2 != str.end() && *it2 != ' ')
+      ++it2;
+    std::reverse(it1, it2);
+    it1 = it2;
+  }
+}
+
+void test_reverse_word_order() {
+  auto rev = [](const std::string &str) {
+    std::string res = str;
+    reverse_word_order(res);
+    return res;
+  };
+  assert(rev("Alice likes Bob") == "Bob likes Alice");
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -698,7 +721,8 @@ int main() {
   // test_find_most_common();
   // test_reverse_digits();
   // test_sudoku_is_valid();
-  test_flood_fill();
+  // test_flood_fill();
+  test_reverse_word_order();
 
   return 0;
 }
