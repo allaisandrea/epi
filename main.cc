@@ -7,6 +7,7 @@
 #include <queue>
 #include <sstream>
 #include <stack>
+#include <stdexcept>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -639,7 +640,7 @@ void test_sudoku_is_valid() {
 }
 
 void flood_fill(int rows, int cols, std::vector<bool> &image, int r, int c) {
-  assert(image.size() == rows * cols);
+  assert(int(image.size()) == rows * cols);
   constexpr std::array<std::array<int, 2>, 4> deltas{
       {{1, 0}, {0, 1}, {-1, 0}, {0, -1}}};
   const bool color = image[r * rows + c];
@@ -755,6 +756,179 @@ void test_remove_kth_last() {
                       {}));
 }
 
+template <typename T> class CircularQueue {
+public:
+  CircularQueue(const size_t capacity)
+      : data_(capacity, {}), begin_{}, end_{}, empty_{true} {
+    if (capacity == 0) {
+      throw std::logic_error("Zero capacity");
+    }
+  }
+
+  size_t size() const {
+    if (end_ > begin_)
+      return end_ - begin_;
+    if (end_ < begin_)
+      return end_ + data_.size() - begin_;
+    if (empty_)
+      return 0;
+    return data_.size();
+  }
+
+  size_t capacity() const { return data_.size(); }
+
+  void push(T &&x) {
+    if (!empty_ && end_ == begin_) {
+      std::vector<T> new_data(data_.capacity() * 2);
+      auto it =
+          std::copy(data_.begin() + begin_, data_.end(), new_data.begin());
+      std::copy(data_.begin(), data_.begin() + begin_, it);
+      begin_ = 0;
+      end_ = data_.size();
+      data_ = std::move(new_data);
+    }
+    empty_ = false;
+    data_[end_++] = std::move(x);
+    if (end_ == data_.size()) {
+      end_ = 0;
+    }
+  }
+
+  T pop() {
+    if (empty_) {
+      throw std::logic_error("Empty");
+    }
+    auto result = std::move(data_[begin_++]);
+    if (begin_ == data_.size()) {
+      begin_ = 0;
+    }
+    empty_ = (begin_ == end_);
+    return result;
+  }
+
+private:
+  std::vector<T> data_;
+  size_t begin_;
+  size_t end_;
+  bool empty_;
+};
+
+template <typename Func> void assert_throws(Func func) {
+  bool caught = false;
+  try {
+    func();
+  } catch (std::logic_error &e) {
+    caught = true;
+  }
+
+  assert(caught);
+}
+
+void test_circular_queue() {
+  {
+    CircularQueue<int> queue(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+
+  {
+    CircularQueue<int> queue(1);
+    queue.push(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 1);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+
+  {
+    CircularQueue<int> queue(1);
+    queue.push(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    queue.push(2);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    assert(queue.pop() == 1);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 2);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+
+  {
+    CircularQueue<int> queue(1);
+    queue.push(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    queue.push(2);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    queue.push(3);
+    assert(queue.capacity() == 4);
+    assert(queue.size() == 3);
+    assert(queue.pop() == 1);
+    assert(queue.size() == 2);
+    assert(queue.pop() == 2);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 3);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+
+  {
+    CircularQueue<int> queue(1);
+    queue.push(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 0);
+    queue.push(2);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    queue.push(3);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    assert(queue.pop() == 2);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 3);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+
+  {
+    CircularQueue<int> queue(1);
+    queue.push(1);
+    assert(queue.capacity() == 1);
+    assert(queue.size() == 1);
+    queue.push(2);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    assert(queue.pop() == 1);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 2);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+    queue.push(3);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 1);
+    queue.push(4);
+    assert(queue.capacity() == 2);
+    assert(queue.size() == 2);
+    assert(queue.pop() == 3);
+    assert(queue.size() == 1);
+    assert(queue.pop() == 4);
+    assert(queue.size() == 0);
+    assert_throws([&queue]() { queue.pop(); });
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -773,7 +947,8 @@ int main() {
   // test_sudoku_is_valid();
   // test_flood_fill();
   // test_reverse_word_order();
-  test_remove_kth_last();
+  // test_remove_kth_last();
+  test_circular_queue();
 
   return 0;
 }
