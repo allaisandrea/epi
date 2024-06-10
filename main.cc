@@ -705,6 +705,56 @@ void test_reverse_word_order() {
   assert(rev("Alice likes Bob") == "Bob likes Alice");
 }
 
+std::shared_ptr<LinkedListNode>
+remove_kth_last(const std::shared_ptr<LinkedListNode> n, int k) {
+  auto q = n;
+  auto p = n;
+  for (int i = 0; i < k + 1; ++i) {
+    if (q == nullptr) {
+      return nullptr;
+    }
+    q = q->next;
+  }
+  if (q == nullptr) {
+    return p->next;
+  }
+  while (q->next != nullptr) {
+    q = q->next;
+    p = p->next;
+  }
+  p->next = p->next->next;
+  return n;
+}
+
+std::vector<int> to_vector(std::shared_ptr<LinkedListNode> n) {
+  std::vector<int> result;
+  while (n != nullptr) {
+    result.push_back(n->value);
+    n = n->next;
+  }
+  return result;
+}
+
+void test_remove_kth_last() {
+  auto p = &prepend;
+  assert(remove_kth_last(nullptr, 0) == nullptr);
+  assert(remove_kth_last(nullptr, 1) == nullptr);
+  assert(remove_kth_last(p(1, nullptr), 0) == nullptr);
+  assert(remove_kth_last(p(1, nullptr), 1) == nullptr);
+  assert(remove_kth_last(p(1, nullptr), 2) == nullptr);
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, nullptr)), 0)), {1}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, nullptr)), 1)), {2}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, nullptr)), 2)), {}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, p(3, nullptr))), 0)),
+                      {1, 2}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, p(3, nullptr))), 1)),
+                      {1, 3}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, p(3, nullptr))), 2)),
+                      {2, 3}));
+  assert(vector_equal(to_vector(remove_kth_last(p(1, p(2, p(3, nullptr))), 3)),
+                      {}));
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -722,7 +772,8 @@ int main() {
   // test_reverse_digits();
   // test_sudoku_is_valid();
   // test_flood_fill();
-  test_reverse_word_order();
+  // test_reverse_word_order();
+  test_remove_kth_last();
 
   return 0;
 }
