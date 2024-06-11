@@ -929,6 +929,32 @@ void test_circular_queue() {
   }
 }
 
+std::shared_ptr<BinaryTreeNode>
+reconstruct_tree(const int *const inorder_begin, const int *const inorder_end,
+                 const int *const preorder_begin,
+                 const int *const preorder_end) {
+  if ((inorder_end < inorder_begin) ||
+      ((inorder_end - inorder_begin) != (preorder_end - preorder_begin))) {
+    throw std::logic_error("Invalid ranges");
+  }
+  if (inorder_begin == inorder_end) {
+    return nullptr;
+  }
+
+  const int root_value = *preorder_begin;
+  auto it = std::find(inorder_begin, inorder_end, root_value);
+  if (it == inorder_end) {
+    throw std::logic_error("Incompatible traversals");
+  }
+  const size_t n_left = it - inorder_begin;
+  return make_tree(root_value,
+                   reconstruct_tree(inorder_begin, inorder_begin + n_left,
+                                    preorder_begin + 1,
+                                    preorder_begin + 1 + n_left),
+                   reconstruct_tree(inorder_begin + n_left + 1, inorder_end,
+                                    preorder_begin + n_left + 1, preorder_end));
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
