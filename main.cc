@@ -2,6 +2,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -1004,7 +1005,7 @@ std::array<size_t, 2> find_closest_repetition(const std::vector<int> &v) {
   for (size_t i = 0; i < v.size(); ++i) {
     const auto &x = v[i];
     auto it = last_seen.insert({x, i}).first;
-    const int distance = i - it->second;
+    const size_t distance = i - it->second;
     if (distance > 0 && distance < min_distance) {
       min_distance = distance;
       result[0] = it->second;
@@ -1025,6 +1026,73 @@ void test_find_closest_repetition() {
   test_case({1, 2, 3, 1, 4, 5}, {0, 3});
   test_case({1, 2, 2, 1, 4, 5}, {1, 2});
 }
+
+int maximum_concurrent_events(const std::vector<std::array<int, 2>> &events) {
+  std::vector<std::pair<int, bool>> end_points;
+  end_points.reserve(events.size() * 2);
+  for (const auto &[begin, end] : events) {
+    end_points.push_back({begin, false});
+    end_points.push_back({end, true});
+  }
+  std::sort(end_points.begin(), end_points.end());
+  int n_concurrent = 0;
+  int max_n_concurrent = 0;
+  for (const auto &[time, is_end] : end_points) {
+    if (is_end) {
+      --n_concurrent;
+    } else {
+      ++n_concurrent;
+    }
+    if (n_concurrent > max_n_concurrent) {
+      max_n_concurrent = n_concurrent;
+    }
+  }
+  return max_n_concurrent;
+}
+
+void test_maximum_concurrent_events() {
+  assert(maximum_concurrent_events({}) == 0);
+  assert(maximum_concurrent_events({{0, 1}}) == 1);
+  assert(maximum_concurrent_events({{0, 1}, {2, 3}}) == 1);
+  assert(maximum_concurrent_events({{0, 1}, {1, 2}, {2, 3}}) == 2);
+  assert(maximum_concurrent_events({{0, 2}, {1, 2}, {3, 4}}) == 2);
+  assert(maximum_concurrent_events({{0, 1}, {2, 3}, {3, 4}}) == 2);
+  assert(maximum_concurrent_events({{0, 1}, {2, 3}, {4, 5}}) == 1);
+  assert(maximum_concurrent_events({{0, 2}, {1, 2}, {2, 3}, {3, 4}}) == 3);
+}
+
+class MostCommonTokens {
+public:
+  MostCommonTokens(size_t max_size) : max_size_(max_size) {}
+
+  void insert(const std::string &token) {
+    auto token_and_count = token_to_count_.insert({token, 0}).first;
+    ++token_and_count->second;
+    auto token_and_it = token_to_iterator_.find(token);
+    if (token_and_it != token_to_iterator_.end()) {
+      count_to_token_.erase(token_and_it->second);
+      token_to_iterator_.erase(token_and_it);
+    }
+    token_to_iterator_.insert(
+        {token, count_to_token_.insert(
+                    {token_and_count->second, token_and_count->first})});
+    if (count_to_token_.size() > max_size_) {
+      token_to_iterator_.erase(count_to_token_.begin()->second);
+      count_to_token_.erase(count_to_token_.begin());
+    }
+  }
+
+  const std::multimap<int, std::string> &count_to_token() {
+    return count_to_token_;
+  }
+
+private:
+  size_t max_size_;
+  std::unordered_map<std::string, int> token_to_count_;
+  std::multimap<int, std::string> count_to_token_;
+  std::unordered_map<std::string, std::map<int, std::string>::iterator>
+      token_to_iterator_;
+};
 
 int main() {
   // test_find_first_common_node();
@@ -1047,7 +1115,8 @@ int main() {
   // test_remove_kth_last();
   // test_circular_queue();
   // test_find_one_missing();
-  test_find_closest_repetition();
+  // test_find_closest_repetition();
+  test_maximum_concurrent_events();
 
   return 0;
 }
