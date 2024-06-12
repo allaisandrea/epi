@@ -997,6 +997,35 @@ void test_find_one_missing() {
   assert(find_one_missing(v).value() == missing);
 }
 
+std::array<size_t, 2> find_closest_repetition(const std::vector<int> &v) {
+  std::unordered_map<size_t, int> last_seen;
+  size_t min_distance = -1;
+  std::array<size_t, 2> result{};
+  for (size_t i = 0; i < v.size(); ++i) {
+    const auto &x = v[i];
+    auto it = last_seen.insert({x, i}).first;
+    const int distance = i - it->second;
+    if (distance > 0 && distance < min_distance) {
+      min_distance = distance;
+      result[0] = it->second;
+      result[1] = i;
+    }
+    it->second = i;
+  }
+  return result;
+}
+
+void test_find_closest_repetition() {
+  auto test_case = [](const std::vector<int> &v,
+                      std::array<size_t, 2> expected) {
+    auto res = find_closest_repetition(v);
+    assert(res[0] == expected[0]);
+    assert(res[1] == expected[1]);
+  };
+  test_case({1, 2, 3, 1, 4, 5}, {0, 3});
+  test_case({1, 2, 2, 1, 4, 5}, {1, 2});
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1017,7 +1046,8 @@ int main() {
   // test_reverse_word_order();
   // test_remove_kth_last();
   // test_circular_queue();
-  test_find_one_missing();
+  // test_find_one_missing();
+  test_find_closest_repetition();
 
   return 0;
 }
