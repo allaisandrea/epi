@@ -3,8 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <queue>
+#include <random>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
@@ -955,6 +957,46 @@ reconstruct_tree(const int *const inorder_begin, const int *const inorder_end,
                                     preorder_begin + n_left + 1, preorder_end));
 }
 
+std::optional<int16_t> find_one_missing(const std::vector<uint16_t> &v) {
+  std::array<int, 256> counts{};
+  const uint16_t mask = 0xFF;
+  for (const uint16_t x : v) {
+    ++counts.at(x & mask);
+  }
+  size_t i = 0;
+  for (i = 0; i < counts.size(); ++i) {
+    if (counts[i] <= 0xFF)
+      break;
+  }
+  if (i == counts.size()) {
+    return {};
+  }
+  counts.fill(0);
+  for (const uint16_t x : v) {
+    if ((x & mask) == i) {
+      ++counts.at((x >> 8) & mask);
+    }
+  }
+  size_t j = 0;
+  for (j = 0; j < counts.size(); ++j) {
+    if (counts[j] == 0)
+      break;
+  }
+  assert(j < counts.size());
+  return (j << 8) | i;
+}
+
+void test_find_one_missing() {
+  std::vector<uint16_t> v(0xFFFF, 0);
+  std::iota(v.begin(), v.end(), 0);
+  std::mt19937 rng;
+  std::shuffle(v.begin(), v.end(), rng);
+  const size_t i = std::uniform_int_distribution<size_t>(0, v.size() - 1)(rng);
+  const uint16_t missing = v[i];
+  v.erase(v.begin() + i);
+  assert(find_one_missing(v).value() == missing);
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -974,7 +1016,8 @@ int main() {
   // test_flood_fill();
   // test_reverse_word_order();
   // test_remove_kth_last();
-  test_circular_queue();
+  // test_circular_queue();
+  test_find_one_missing();
 
   return 0;
 }
