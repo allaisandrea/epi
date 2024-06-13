@@ -1094,6 +1094,71 @@ private:
       token_to_iterator_;
 };
 
+struct KnapsackSolution {
+  int value;
+  std::vector<size_t> objects;
+};
+auto knapsack(const std::vector<int> &w, const std::vector<int> &v,
+              const int max_w) {
+  std::map<int, KnapsackSolution> wtos{{0, {0, {}}}};
+  for (size_t i = 0; i < w.size(); ++i) {
+    assert(w[i] > 0);
+    for (auto it = wtos.begin(); it != wtos.end(); ++it) {
+      auto &[w0, s0] = *it;
+      if (!s0.objects.empty() && s0.objects.back() == i) {
+        continue;
+      }
+      const int w1 = w0 + w[i];
+      if (w1 > max_w) {
+        continue;
+      }
+      const int v1 = s0.value + v[i];
+      auto ub = wtos.upper_bound(w1);
+      assert(ub != wtos.begin());
+      auto it1 = std::prev(ub);
+      assert(it1->first <= w1);
+      if (it1->second.value > v1) {
+        continue;
+      }
+      if (it1->first != w1) {
+        const auto [it2, inserted] = wtos.insert({w1, s0});
+        it1 = it2;
+        assert(inserted);
+      }
+      it1->second.value = v1;
+      it1->second.objects.push_back(i);
+      ++it1;
+      while (it1 != wtos.end() && it1->second.value < v1)
+        it1 = wtos.erase(it1);
+    }
+  }
+  return wtos;
+}
+
+void test_knapsack() {
+  const std::vector<std::vector<int>> ww = {
+      {8, 4, 5},
+      {8, 4, 2, 3},
+      {8, 4, 2, 3, 3},
+  };
+
+  const std::vector<std::vector<int>> vv = {
+      {32, 15, 19},
+      {32, 15, 7, 11},
+      {32, 15, 7, 11, 10},
+  };
+
+  for (size_t i = 0; i < ww.size(); ++i) {
+    auto wtos = knapsack(ww[i], vv[i], 1024);
+    std::cout << "w: " << ww[i] << "\nv: " << vv[i] << "\nSolution:\n";
+    for (const auto &[w, s] : wtos) {
+      std::cout << "w: " << w << " v: " << s.value << " obj: " << s.objects
+                << "\n";
+    }
+    std::cout << "\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1116,7 +1181,8 @@ int main() {
   // test_circular_queue();
   // test_find_one_missing();
   // test_find_closest_repetition();
-  test_maximum_concurrent_events();
+  // test_maximum_concurrent_events();
+  test_knapsack();
 
   return 0;
 }
