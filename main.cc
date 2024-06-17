@@ -25,6 +25,16 @@ std::ostream &operator<<(std::ostream &strm, const std::vector<T> &v) {
   return strm;
 }
 
+template <typename T, size_t n>
+std::ostream &operator<<(std::ostream &strm, const std::array<T, n> &v) {
+  strm << "[";
+  for (const auto &x : v) {
+    strm << x << ",";
+  }
+  strm << "]";
+  return strm;
+}
+
 struct LinkedListNode {
   std::shared_ptr<LinkedListNode> next;
   int value;
@@ -1159,6 +1169,73 @@ void test_knapsack() {
   }
 }
 
+std::vector<std::array<size_t, 2>> max_water(const std::vector<int> &a) {
+  std::vector<size_t> hi = {0};
+  for (size_t i = 1; i < a.size(); ++i) {
+    if (a[i] > a[hi.back()]) {
+      hi.push_back(i);
+    }
+  }
+
+  int max_area = 0;
+  std::vector<std::array<size_t, 2>> i_max_area;
+
+  int max_a = 0;
+  for (size_t i = a.size() - 1; i < a.size(); --i) {
+    if (a[i] <= max_a)
+      continue;
+    for (const auto &j : hi) {
+      if (j >= i) {
+        break;
+      }
+      const int area = (i - j) * std::min(a[i], a[j]);
+      if (area > max_area) {
+        i_max_area.clear();
+      }
+      if (area >= max_area) {
+        max_area = area;
+        i_max_area.push_back({j, i});
+      }
+    }
+  }
+  return i_max_area;
+}
+
+std::vector<std::array<size_t, 2>>
+max_water_slow_and_correct(const std::vector<int> &a) {
+  int max_area = 0;
+  std::vector<std::array<size_t, 2>> i_max_area;
+  for (size_t i = 0; i < a.size(); ++i) {
+    for (size_t j = i + 1; j < a.size(); ++j) {
+      const int area = (j - i) * std::min(a[i], a[j]);
+      if (area > max_area) {
+        i_max_area.clear();
+      }
+      if (area >= max_area) {
+        max_area = area;
+        i_max_area.push_back({i, j});
+      }
+    }
+  }
+  return i_max_area;
+}
+
+void test_max_water() {
+  std::mt19937 rng;
+  for (size_t it = 0; it < 128; ++it) {
+    std::uniform_int_distribution uniform_int(0, 16);
+    std::vector<int> a(32);
+    for (size_t i = 0; i < a.size(); ++i) {
+      a[i] = uniform_int(rng);
+    }
+    auto v1 = max_water(a);
+    auto v2 = max_water_slow_and_correct(a);
+    std::cout << "a:  " << a << "\n";
+    std::cout << "v1: " << v1 << "\n";
+    std::cout << "v2: " << v2 << "\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1182,7 +1259,8 @@ int main() {
   // test_find_one_missing();
   // test_find_closest_repetition();
   // test_maximum_concurrent_events();
-  test_knapsack();
+  // test_knapsack();
+  test_max_water();
 
   return 0;
 }
