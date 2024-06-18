@@ -1236,6 +1236,68 @@ void test_max_water() {
   }
 }
 
+auto largest_building(const std::vector<int> &h) {
+  std::stack<std::pair<size_t, int>> open;
+  int max_area = 0;
+  std::vector<std::array<size_t, 3>> i_max_area;
+  for (size_t i = 0; i < h.size() + 1; ++i) {
+    const int h_i = i < h.size() ? h[i] : 0;
+    size_t i_start = i;
+    while (!open.empty() && open.top().second >= h_i) {
+      i_start = open.top().first;
+      const int area = (i - i_start) * open.top().second;
+      if (area > max_area) {
+        i_max_area.clear();
+      }
+      if (area >= max_area) {
+        max_area = area;
+        i_max_area.push_back({i_start, i, size_t(open.top().second)});
+      }
+      open.pop();
+    }
+    open.push({i_start, h_i});
+  }
+  return i_max_area;
+}
+
+auto largest_building_slow_and_correct(const std::vector<int> &h) {
+  int max_area = 0;
+  std::vector<std::array<size_t, 3>> i_max_area;
+  for (size_t i = 0; i < h.size(); ++i) {
+    for (size_t j = i; j < h.size(); ++j) {
+      int min_h = h[i];
+      for (size_t k = i; k <= j; ++k) {
+        min_h = std::min(min_h, h[k]);
+      }
+      const int area = (j - i + 1) * min_h;
+      if (area > max_area) {
+        i_max_area.clear();
+      }
+      if (area >= max_area) {
+        max_area = area;
+        i_max_area.push_back({i, j + 1, size_t(min_h)});
+      }
+    }
+  }
+  return i_max_area;
+}
+
+void test_largest_building() {
+  std::mt19937 rng;
+  for (size_t it = 0; it < 128; ++it) {
+    std::uniform_int_distribution uniform_int(0, 16);
+    std::vector<int> h(32);
+    for (size_t i = 0; i < h.size(); ++i) {
+      h[i] = uniform_int(rng);
+    }
+    auto i1 = largest_building(h);
+    auto i2 = largest_building_slow_and_correct(h);
+    std::cout << "h:  " << h << "\n";
+    std::cout << "i1: " << i1 << "\n";
+    std::cout << "i2: " << i2 << "\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1260,7 +1322,8 @@ int main() {
   // test_find_closest_repetition();
   // test_maximum_concurrent_events();
   // test_knapsack();
-  test_max_water();
+  // test_max_water();
+  test_largest_building();
 
   return 0;
 }
