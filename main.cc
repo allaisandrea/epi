@@ -1350,16 +1350,71 @@ void test_mark_interior() {
     'W','B','B','W','B','W',
     'W','W','B','W','W','W',
   };
-  //clang-format on
+  // clang-format on
   const int rows = 5;
   const int cols = 6;
   mark_interior(rows, cols, img);
-  for(int r = 0; r < rows; ++r) {
-    for(int c = 0; c < cols; ++c) {
+  for (int r = 0; r < rows; ++r) {
+    for (int c = 0; c < cols; ++c) {
       std::cout << img.at(r * cols + c) << ",";
     }
     std::cout << "\n";
   }
+}
+
+bool sequence_appears_in_matrix_recursive(const std::vector<int> &seq,
+                                          const size_t seq_start,
+                                          const size_t row, const size_t col,
+                                          const size_t rows, const size_t cols,
+                                          const std::vector<int> &matrix) {
+  const std::vector<std::array<int, 2>> displ = {
+      {1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+  if (seq_start == seq.size()) {
+    return true;
+  }
+  if (matrix.at(row * cols + col) == seq.at(seq_start)) {
+    for (const auto [dr, dc] : displ) {
+      const size_t row1 = row + dr;
+      const size_t col1 = col + dc;
+      if (row1 < rows && col1 < cols &&
+          sequence_appears_in_matrix_recursive(seq, seq_start + 1, row1, col1,
+                                               rows, cols, matrix)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool sequence_appears_in_matrix(const std::vector<int> &seq, const size_t rows,
+                                const size_t cols,
+                                const std::vector<int> &matrix) {
+  for (size_t row = 0; row < rows; ++row) {
+    for (size_t col = 0; col < cols; ++col) {
+      if (sequence_appears_in_matrix_recursive(seq, 0, row, col, rows, cols,
+                                               matrix)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void test_sequence_appears_in_matrix() {
+  // clang-format off
+  const std::vector<int> matrix = {
+    0, 1, 2, 3, 4, 5,
+    6, 7, 8, 9, 0, 1,
+    2, 3, 4, 5, 6, 7,
+    8, 9, 0, 1, 2, 3,
+  };
+  // clang-format on
+  const int rows = 4;
+  const int cols = 6;
+
+  assert(sequence_appears_in_matrix({0, 1, 7, 8, 4}, rows, cols, matrix));
+  assert(sequence_appears_in_matrix({8, 9, 3, 4, 0}, rows, cols, matrix));
+  assert(!sequence_appears_in_matrix({8, 9, 3, 4, 9}, rows, cols, matrix));
 }
 
 int main() {
@@ -1388,7 +1443,8 @@ int main() {
   // test_knapsack();
   // test_max_water();
   // test_largest_building();
-  test_mark_interior();
+  // test_mark_interior();
+  test_sequence_appears_in_matrix();
 
   return 0;
 }
