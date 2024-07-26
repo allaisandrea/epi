@@ -1298,6 +1298,70 @@ void test_largest_building() {
   }
 }
 
+void mark_interior(int rows, int cols, std::vector<char> &img) {
+  using Ix = std::array<int, 2>;
+  const std::vector<Ix> displ = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+  auto at = [&img, cols](const Ix &ix) -> char & {
+    return img.at(ix[0] * cols + ix[1]);
+  };
+  std::queue<Ix> queue;
+  auto maybe_push = [&at, &img, &queue, cols](const Ix &ix) -> void {
+    char &pixel = at(ix);
+    if (pixel == 'W') {
+      pixel = 'V';
+      queue.push(ix);
+    }
+  };
+  for (int r = 0; r < rows; ++r) {
+    maybe_push({r, 0});
+    maybe_push({r, cols - 1});
+  }
+  for (int c = 0; c < cols; ++c) {
+    maybe_push({0, c});
+    maybe_push({rows - 1, c});
+  }
+
+  while (!queue.empty()) {
+    const Ix ix = queue.front();
+    queue.pop();
+    for (const auto &[dr, dc] : displ) {
+      const Ix ix1{ix[0] + dr, ix[1] + dc};
+      if (ix1[0] >= 0 && ix1[0] < rows && ix1[1] >= 0 && ix1[1] < cols) {
+        maybe_push(ix1);
+      }
+    }
+  }
+
+  for (char &pixel : img) {
+    if (pixel == 'V') {
+      pixel = 'W';
+    } else if (pixel == 'W') {
+      pixel = 'B';
+    }
+  }
+}
+
+void test_mark_interior() {
+  // clang-format off
+  std::vector<char> img = {
+    'W','W','B','W','W','W',
+    'W','B','B','W','B','W',
+    'B','W','W','B','W','B',
+    'W','B','B','W','B','W',
+    'W','W','B','W','W','W',
+  };
+  //clang-format on
+  const int rows = 5;
+  const int cols = 6;
+  mark_interior(rows, cols, img);
+  for(int r = 0; r < rows; ++r) {
+    for(int c = 0; c < cols; ++c) {
+      std::cout << img.at(r * cols + c) << ",";
+    }
+    std::cout << "\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1323,7 +1387,8 @@ int main() {
   // test_maximum_concurrent_events();
   // test_knapsack();
   // test_max_water();
-  test_largest_building();
+  // test_largest_building();
+  test_mark_interior();
 
   return 0;
 }
