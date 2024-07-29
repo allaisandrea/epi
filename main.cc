@@ -12,6 +12,7 @@
 #include <stack>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -1417,6 +1418,42 @@ void test_sequence_appears_in_matrix() {
   assert(!sequence_appears_in_matrix({8, 9, 3, 4, 9}, rows, cols, matrix));
 }
 
+std::vector<std::vector<std::string>>
+find_matches_in_dict(const size_t str_begin, const std::string &str,
+                     const std::unordered_set<std::string> &dict) {
+  if (str_begin == str.size()) {
+    return {{}};
+  }
+  std::vector<std::vector<std::string>> result;
+  for (size_t str_end = str_begin + 1; str_end <= str.size(); ++str_end) {
+    std::string slice(str.begin() + str_begin, str.begin() + str_end);
+    if (dict.count(slice) > 0) {
+      auto matches = find_matches_in_dict(str_end, str, dict);
+      for (const auto &match : matches) {
+        result.push_back({});
+        result.back().push_back(slice);
+        result.back().insert(result.back().end(), match.begin(), match.end());
+      }
+    }
+  }
+  return result;
+}
+
+void test_find_matches_in_dict() {
+  std::unordered_set<std::string> dict = {
+      "bar", "barfoo", "fo",    "foo",   "for", "fa",   "g",   "ga", "e",
+      "ex",  "foox",   "fooxb", "foorb", "cox", "barf", "oox", "o",  "ox",
+  };
+  auto matches = find_matches_in_dict(0, "barfoox", dict);
+  std::cout << "Matches:\n";
+  for (const auto &match : matches) {
+    for (const auto &word : match) {
+      std::cout << word << ",";
+    }
+    std::cout << "\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1444,7 +1481,8 @@ int main() {
   // test_max_water();
   // test_largest_building();
   // test_mark_interior();
-  test_sequence_appears_in_matrix();
+  // test_sequence_appears_in_matrix();
+  test_find_matches_in_dict();
 
   return 0;
 }
