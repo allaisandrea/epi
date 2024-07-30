@@ -1454,6 +1454,29 @@ void test_find_matches_in_dict() {
   }
 }
 
+std::vector<std::vector<int>> compute_power_set(const std::vector<int> &v) {
+  std::vector<std::vector<int>> result = {{}};
+  for (size_t i = 0; i < v.size(); ++i) {
+    const size_t result_size = result.size();
+    for (size_t j = 0; j < result_size; ++j) {
+      result.push_back(result[j]);
+      result.back().push_back(v[i]);
+    }
+  }
+  return result;
+}
+
+void test_compute_power_set() {
+  auto ps = compute_power_set({1, 2, 3, 4});
+  for (const auto &x : ps) {
+    std::cout << "{";
+    for (int i : x) {
+      std::cout << i << ",";
+    }
+    std::cout << "}\n";
+  }
+}
+
 int main() {
   // test_find_first_common_node();
   // test_evaluate_rpn();
@@ -1482,7 +1505,8 @@ int main() {
   // test_largest_building();
   // test_mark_interior();
   // test_sequence_appears_in_matrix();
-  test_find_matches_in_dict();
+  // test_find_matches_in_dict();
+  test_compute_power_set();
 
   return 0;
 }
